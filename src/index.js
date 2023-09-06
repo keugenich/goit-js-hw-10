@@ -3,6 +3,10 @@ import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
+new SlimSelect({
+    select: '#selectElement'
+})
+
 const elements = {
     selectEl: document.querySelector('.breed-select'),
     textMarkEl: document.querySelector('.cat-info'),
@@ -14,22 +18,29 @@ const { selectEl, textMarkEl, loaderEl, errorEl } = elements;
 
 textMarkEl.classList.add('is-hidden');
 
-selectEl.addEventListener('change', createMarkUp);
+// Оновлена функція для ініціалізації селектора SlimSelect
+function initializeSelect(data) {
+    loaderEl.classList.replace('loader', 'is-hidden');
+    errorEl.classList.add('is-hidden');
+    textMarkEl.classList.add('is-hidden');
+
+    const markSelect = data.map(({ name, id }) => {
+        return `<option value="${id}">${name}</option>`;
+    });
+
+    selectEl.innerHTML = markSelect.join('');
+    new SlimSelect({
+        select: selectEl,
+    });
+    selectEl.addEventListener('change', createMarkUp); // Додаємо обробник події на селектор
+}
 
 updateSelect();
 
 function updateSelect(data) {
     fetchBreeds(data)
         .then(data => {
-            loaderEl.classList.replace('loader', 'is-hidden');
-
-            let markSelect = data.map(({ name, id }) => {
-                return `<option value ='${id}'>${name}</option>`;
-            });
-            selectEl.insertAdjacentHTML('beforeend', markSelect);
-            new SlimSelect({
-                select: selectEl,
-            });
+            initializeSelect(data); // Ініціалізуємо селектор з даними
         })
         .catch(onFetchError);
 }
@@ -53,11 +64,11 @@ function createMarkUp(event) {
         .catch(onFetchError);
 }
 
-function onFetchError() {
-    selectEl.classList.remove('is-hidden');
+function onFetchError(error) {
     loaderEl.classList.replace('loader', 'is-hidden');
+    selectEl.classList.remove('is-hidden');
 
     Notify.failure(
-        'Oops! Something went wrong! Try reloading the page or select another cat breed!'
+        `Oops! Something went wrong: ${error.message}. Try reloading the page or select another cat breed!`
     );
 }
