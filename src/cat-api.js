@@ -1,33 +1,33 @@
-import axios from "axios";
-
-const apiKey = "live_8dbmcwczl2BD780JhZKJEyUt601F1OUO2LkZtyy3jHlhgPRNBH3MoyPJxbjfHCAB";
-axios.defaults.headers.common["x-api-key"] = apiKey;
+const URL = 'https://api.thecatapi.com/v1';
+const API_KEY =
+    'live_8dbmcwczl2BD780JhZKJEyUt601F1OUO2LkZtyy3jHlhgPRNBH3MoyPJxbjfHCAB';
 
 export function fetchBreeds() {
-    return axios.get("https://api.thecatapi.com/v1/breeds")
+    return fetch(`${URL}/breeds?api_key=${API_KEY}`)
         .then(response => {
-            return response.data.map(breed => ({
-                id: breed.id,
-                name: breed.name
-            }));
+            if (!response.ok) {
+                console.error('Error fetching breeds:', response.status);
+                throw new Error('Failed to fetch breeds');
+            }
+            return response.json();
         })
         .catch(error => {
-            throw new Error("Помилка при отриманні списку порід: " + error);
+            console.error('Fetch breeds error:', error);
+            throw error;
         });
 }
 
 export function fetchCatByBreed(breedId) {
-    return axios.get(`https://api.thecatapi.com/v1/images/search?breed_ids=${breedId}`)
+    return fetch(`${URL}/images/search?api_key=${API_KEY}&breed_ids=${breedId}`)
         .then(response => {
-            const catData = response.data[0]; // Оскільки ми отримуємо масив, візьмемо перший об'єкт з нього
-            return {
-                imageUrl: catData.url,
-                breedName: catData.breeds[0].name,
-                description: catData.breeds[0].description,
-                temperament: catData.breeds[0].temperament
-            };
+            if (!response.ok) {
+                console.error('Error fetching cat by breed:', response.status);
+                throw new Error('Failed to fetch cat by breed');
+            }
+            return response.json();
         })
         .catch(error => {
-            throw new Error("Помилка при отриманні інформації про кота: " + error);
+            console.error('Fetch cat by breed error:', error);
+            throw error;
         });
 }
