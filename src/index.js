@@ -3,10 +3,6 @@ import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-new SlimSelect({
-    select: '#selectElement'
-})
-
 const elements = {
     selectEl: document.querySelector('.breed-select'),
     textMarkEl: document.querySelector('.cat-info'),
@@ -16,59 +12,61 @@ const elements = {
 
 const { selectEl, textMarkEl, loaderEl, errorEl } = elements;
 
-textMarkEl.classList.add('is-hidden');
+// Початковий стан: сховати лоадер і помилку
+selectEl.style.display = 'none';
+loaderEl.style.display = 'none';
+errorEl.style.display = 'none';
 
-// Оновлена функція для ініціалізації селектора SlimSelect
-function initializeSelect(data) {
-    loaderEl.classList.replace('loader', 'is-hidden');
-    errorEl.classList.add('is-hidden');
-    textMarkEl.classList.add('is-hidden');
-
-    const markSelect = data.map(({ name, id }) => {
-        return `<option value="${id}">${name}</option>`;
-    });
-
-    selectEl.innerHTML = markSelect.join('');
-    new SlimSelect({
-        select: selectEl,
-    });
-    selectEl.addEventListener('change', createMarkUp); // Додаємо обробник події на селектор
-}
+selectEl.addEventListener('change', createMarkUp);
 
 updateSelect();
 
 function updateSelect(data) {
+    loaderEl.style.display = 'none'; // Приховуємо лоадер перед завантаженням
+    selectEl.style.display = 'block'; // Відображаємо select перед завантаженням
+
     fetchBreeds(data)
         .then(data => {
-            initializeSelect(data); // Ініціалізуємо селектор з даними
+            loaderEl.style.display = 'block'; // Відображаємо лоадер після завантаження
+            selectEl.style.display = 'none'; // Приховуємо select перед оновленням
+
+            let markSelect = data.map(({ name, id }) => {
+                return `<option value ='${id}'>${name}</option>`;
+            });
+            selectEl.innerHTML = markSelect.join('');
+            new SlimSelect({
+                select: selectEl,
+            });
+            loaderEl.style.display = 'none'; // Приховуємо лоадер після оновлення
+            selectEl.style.display = 'block'; // Відображаємо select після оновлення
         })
         .catch(onFetchError);
 }
 
 function createMarkUp(event) {
-    loaderEl.classList.replace('is-hidden', 'loader');
-    selectEl.classList.add('is-hidden');
-    textMarkEl.classList.add('is-hidden');
+    loaderEl.style.display = 'block'; // Відображаємо лоадер перед завантаженням
+    selectEl.style.display = 'none'; // Приховуємо select перед завантаженням
+    textMarkEl.style.display = 'none';
 
     const breedId = event.currentTarget.value;
 
     fetchCatByBreed(breedId)
         .then(data => {
-            loaderEl.classList.replace('loader', 'is-hidden');
-            selectEl.classList.remove('is-hidden');
+            loaderEl.style.display = 'none'; // Приховуємо лоадер після завантаження
+            selectEl.style.display = 'block'; // Відображаємо select після завантаження
             const { url, breeds } = data[0];
 
             textMarkEl.innerHTML = `<img src="${url}" alt="${breeds[0].name}" width="400"/><div class="box"><h2>${breeds[0].name}</h2><p>${breeds[0].description}</p><p><strong>Temperament:</strong> ${breeds[0].temperament}</p></div>`;
-            textMarkEl.classList.remove('is-hidden');
+            textMarkEl.style.display = 'block';
         })
         .catch(onFetchError);
 }
 
-function onFetchError(error) {
-    loaderEl.classList.replace('loader', 'is-hidden');
-    selectEl.classList.remove('is-hidden');
+function onFetchError() {
+    loaderEl.style.display = 'none'; // Приховуємо лоадер після завантаження
+    selectEl.style.display = 'block'; // Відображаємо select після завантаження
 
     Notify.failure(
-        `Oops! Something went wrong: ${error.message}. Try reloading the page or select another cat breed!`
+        'Oops! Something went wrong! Try reloading the page or select another cat breed!'
     );
 }
